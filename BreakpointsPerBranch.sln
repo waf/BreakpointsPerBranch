@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.3.32825.248
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BreakpointsPerBranch", "BreakpointsPerBranch\BreakpointsPerBranch.csproj", "{0C6C44FA-4A22-41FB-A85B-404DE5112F7E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x86 = Debug|x86
+		Release|Any CPU = Release|Any CPU
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0C6C44FA-4A22-41FB-A85B-404DE5112F7E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0C6C44FA-4A22-41FB-A85B-404DE5112F7E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0C6C44FA-4A22-41FB-A85B-404DE5112F7E}.Debug|x86.ActiveCfg = Debug|x86
+		{0C6C44FA-4A22-41FB-A85B-404DE5112F7E}.Debug|x86.Build.0 = Debug|x86
+		{0C6C44FA-4A22-41FB-A85B-404DE5112F7E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0C6C44FA-4A22-41FB-A85B-404DE5112F7E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0C6C44FA-4A22-41FB-A85B-404DE5112F7E}.Release|x86.ActiveCfg = Release|x86
+		{0C6C44FA-4A22-41FB-A85B-404DE5112F7E}.Release|x86.Build.0 = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {2EACD450-38EE-4921-952B-9EE8E3E6E439}
+	EndGlobalSection
+EndGlobal
