@@ -1,13 +1,13 @@
 ﻿global using System;
 global using Community.VisualStudio.Toolkit;
 global using Microsoft.VisualStudio.Shell;
-global using Task = System.Threading.Tasks.Task;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using EnvDTE;
 using EnvDTE100;
 using EnvDTE80;
@@ -39,7 +39,7 @@ namespace BreakpointsPerBranch
             this.debugger = (Debugger5)(await VS.GetServiceAsync<DTE, DTE2>()).Debugger;
 
             this.currentSolutionIdentifier = CreateMD5(solution.Name);
-            this.currentBranchName = ReadGitHeadFile(Path.Combine(gitRepositoryPath, "HEAD"));
+            this.currentBranchName = await ReadGitHeadFileAsync(Path.Combine(gitRepositoryPath, "HEAD"));
             this.gitBranchTracker = new FileSystemWatcher(gitRepositoryPath, "HEAD")
             {
                 NotifyFilter = NotifyFilters.FileName,
@@ -55,9 +55,11 @@ namespace BreakpointsPerBranch
 
         private async void OnBranchSwitched(object sender, FileSystemEventArgs e)
         {
-            string newBranchName = ReadGitHeadFile(e.FullPath);
+            string newBranchName = null;
+
             try
             {
+                newBranchName = await ReadGitHeadFileAsync(e.FullPath);
                 var newBranchBreakpoints = GetSavedBreakpointFilename(currentSolutionIdentifier, newBranchName);
                 var currentBranchBreakpoints = GetSavedBreakpointFilename(currentSolutionIdentifier, currentBranchName);
 
@@ -75,21 +77,47 @@ namespace BreakpointsPerBranch
                 }
                 debugger.ImportBreakpoints(newBranchBreakpoints);
             }
-            finally
+            catch (Exception ex)
             {
-                currentBranchName = newBranchName;
+                ActivityLog.LogError(nameof(BreakpointsPerBranch), ex.Message);
+                this.Dispose(false);
             }
+
+            currentBranchName = newBranchName;
+            ActivityLog.LogInformation(nameof(BreakpointsPerBranch), "Updating current branch name to " + currentBranchName);
         }
 
         /// <summary>
         /// At the start of every debugging session, record the current set of breakpoints.
         /// </summary>
-        private void OnDebuggingStarted() =>
+        private void OnDebuggingStarted()
+        {
             debugger.ExportBreakpoints(GetSavedBreakpointFilename(currentSolutionIdentifier, currentBranchName));
+            ActivityLog.LogInformation(nameof(BreakpointsPerBranch), "Exported breakpoints to " + currentBranchName);
+        }
 
         // extract "refs/heads/branch-name" from the HEAD file containing "ref: refs/heads/branch-name"
-        private static string ReadGitHeadFile(string filepath) =>
-            File.ReadAllText(filepath).Split(new[] { ":" }, 2, StringSplitOptions.None)[1].Trim();
+        private static async Task<string> ReadGitHeadFileAsync(string filepath)
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                try
+                {
+                    // open/read without acquiring a lock
+                    using var stream = new FileStream(filepath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                    using var reader = new StreamReader(stream);
+                    var input = await reader.ReadToEndAsync();
+                    return input.Split(new[] { ":" }, 2, StringSplitOptions.None)[1].Trim();
+                }
+                catch (Exception ex)
+                {
+                    ActivityLog.LogError(nameof(BreakpointsPerBranch), ex.Message);
+                    await Task.Delay(200);
+                }
+            }
+
+            throw new InvalidOperationException("Could not access Git HEAD file, see ActivityLog for more detail.");
+        }
 
         private static bool AreBreakpointsIdentical(string newBranchBreakpoints, string currentBranchBreakpoints) =>
             File.ReadAllText(newBranchBreakpoints) == File.ReadAllText(currentBranchBreakpoints);
